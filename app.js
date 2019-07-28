@@ -18,6 +18,8 @@ app.use(require('body-parser').json())
 // Routes
 app.use('/api/books', require('./api/routes/books'))
 
+app.use('/api', require('./api/routes/auth'))
+
 // Not Found Handler
 app.use((req, res, next) => {
   const error = new Error(`Could not ${req.method} ${req.path}`)
