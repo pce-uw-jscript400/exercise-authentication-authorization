@@ -1,3 +1,4 @@
+const { SECRET_KEY } = process.env;
 var jsonwebtoken = require('jsonwebtoken');
 const router = require('express').Router();
 const User = require('../models/user');
@@ -28,7 +29,7 @@ router.post('/signup', async(req, res, next) => {
         //TODO: add the JWT stuff here
         const payload = { id: user._id }
         const options = { expiresIn: '1 day' }
-        const token = jsonwebtoken.sign(payload, 'MYSECRETPASSCODE', options)
+        const token = jsonwebtoken.sign(payload, 'SECRET_KEY', options)
 
         res.json({ status, token});
     } catch(e) {
