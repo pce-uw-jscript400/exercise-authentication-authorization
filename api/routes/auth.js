@@ -40,4 +40,27 @@ router.post('/signup', async(req, res, next) => {
     }
 });
 
+router.post('/login', async(req, res, next) => {
+
+    const status = 201;
+    
+    try {
+        const { username, password } = req.body;
+        
+        const user = await User.findOne({ username });
+        if (!user) throw new Error(`There was a problem logging in`);
+
+        const isPwdValid = await bcrypt.compare(password, user.password);
+        if(!isPwdValid) throw new Error(`There was a problem logging in `);
+
+        res.json({ status, user });
+
+    } catch(e) {
+        console.error(e);
+        const error = new Error(`Login credentials are incorrect`);
+        error.status = 400;
+        next(error);
+    }
+});
+
 module.exports = router;

@@ -44,7 +44,7 @@ To complete this exercise, you will need to do the following:
 
 - [X] **Create a User Model:** Users have a `username`, a `password`, and an `admin` property which is set to `false` by default.
 
-- [ ] **Create a `POST /api/signup` route:** Create a new route that allows someone to create an account. Securely store the password using the `bcrypt` package. On successful creation, return a JWT token. You should return an error in the following cases:
+- [X] **Create a `POST /api/signup` route:** Create a new route that allows someone to create an account. Securely store the password using the `bcrypt` package. On successful creation, return a JWT token. You should return an error in the following cases:
   * Username is not provided
   * Username is already taken
   * Password is not provided
