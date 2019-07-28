@@ -10,7 +10,16 @@ router.post('/signup', async (req, res, next) => {
     try{
         const { username, password } = req.body
         const user = await Users.findOne({username})
+        
         if (user) throw new Error(`User ${username} already taken.`)
+        if (!username) throw new Error(`Username is not provided!`)
+
+        // Had issues getting the compare to work
+        await bcrypt.compare(password, (err, res) =>{
+            if(res) throw new Error(`User password already taken`)
+        })
+
+        if (!password) throw new Error(`Password is not provided!`)
         const saltRounds = 10
         const hashedPassword = await bcrypt.hash(password, saltRounds)
         const response = await Users.create({
@@ -20,7 +29,7 @@ router.post('/signup', async (req, res, next) => {
         res.status(status).json({ status, response})
     } catch (e){
         console.error(e)
-        const error = new Error(`You can't come to this party.`)
+        const error = new Error(`You can't check out a book.`)
         error.status = 400
         next(error)
     }
