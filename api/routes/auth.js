@@ -1,3 +1,4 @@
+var jsonwebtoken = require('jsonwebtoken');
 const router = require('express').Router();
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
@@ -5,7 +6,7 @@ const bcrypt = require('bcrypt');
 
 router.post('/signup', async(req, res, next) => {
     const status = 201;
-    
+
     try {
         const { username, password } = req.body;
         const exisitingUser = await User.findOne({ username });
@@ -16,7 +17,6 @@ router.post('/signup', async(req, res, next) => {
             throw new Error(`Password must be at least 1 character and less than 8`);
         }
 
-
         const saltRounds = 10;
         const hashedPwd = await bcrypt.hash(password, saltRounds);
 
@@ -24,11 +24,13 @@ router.post('/signup', async(req, res, next) => {
             username, 
             password: hashedPwd
         })
-        //add the JWT stuff here
 
-        res.json({ status, user});
+        //TODO: add the JWT stuff here
+        const payload = { id: user._id }
+        const options = { expiresIn: '1 day' }
+        const token = jsonwebtoken.sign(payload, 'MYSECRETPASSCODE', options)
 
-
+        res.json({ status, token});
     } catch(e) {
         console.error(e);   
         const error = new Error('Error in signing up');
