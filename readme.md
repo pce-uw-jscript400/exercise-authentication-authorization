@@ -50,7 +50,7 @@ To complete this exercise, you will need to do the following:
   * Password is not provided
   * Password is less than 8 characters
 
-- [ ] **Create a `POST /api/login` route:** Create a new route that allows someone to login. On successful creation, return a JWT token. You should return an error in the following cases:
+- [X] **Create a `POST /api/login` route:** Create a new route that allows someone to login. On successful creation, return a JWT token. You should return an error in the following cases:
   * Username is not found
   * Username and password do not match
 

@@ -53,7 +53,11 @@ router.post('/login', async(req, res, next) => {
         const isPwdValid = await bcrypt.compare(password, user.password);
         if(!isPwdValid) throw new Error(`There was a problem logging in `);
 
-        res.json({ status, user });
+        const payload = { id: user._id};
+        const options = { expiresIn: '1 day'};
+        const token = jsonwebtoken.sign(payload, 'SECRET_KEY', options);
+
+        res.json({ status, token });
 
     } catch(e) {
         console.error(e);
