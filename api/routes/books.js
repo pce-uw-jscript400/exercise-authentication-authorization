@@ -4,7 +4,7 @@ const Book = require('../models/book')
 router.get('/', async (req, res, next) => {
   const status = 200
   const response = await Book.find().select('-__v')
-  
+
   res.json({ status, response })
 })
 
@@ -14,8 +14,8 @@ router.get('/:id', async (req, res, next) => {
   try {
     const response = await Book.findById(id).select('-__v')
     if (!response) throw new Error(`Invalid Book _id: ${id}`)
-    
-    res.json({ status, response })  
+
+    res.json({ status, response })
   } catch (e) {
     console.error(e)
     const error = new Error(`Cannot find book with id ${id}.`)
@@ -30,7 +30,7 @@ router.post('/', async (req, res, next) => {
   try {
     const book = await Book.create(req.body)
     if (!book) throw new Error(`Request body failed: ${JSON.stringify(req.body)}`)
-    
+
     const response = await Book.findById(book._id).select('-__v')
     res.json({ status, response })
   } catch (e) {
@@ -56,7 +56,7 @@ router.patch('/:id/reserve', async (req, res, next) => {
     book.reserved.status = true
     // Set the reserved memberId to the current user
     await book.save()
-    
+
     const response = await Book.findById(book._id).select('-__v')
     const status = 200
     res.json({ status, response })
@@ -70,7 +70,7 @@ router.patch('/:id/reserve', async (req, res, next) => {
 router.patch('/:id/return', async (req, res, next) => {
   const status = 200
   const message = 'You must implement this route!'
-  
+
   console.log(message)
   res.status(status).json({ status, message })
 })
