@@ -1,11 +1,14 @@
 const mongoose = require('mongoose')
 const Book = require('../api/models/book')
+const User = require('../api/models/user')
 const config = require('../nodemon.json')
 
 const reset = async () => {
   mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true })
   await Book.deleteMany() // Deletes all records
-  return await Book.create([
+  await User.deleteMany()
+
+  const books = await Book.create([
     {
       title: 'The Colour of Magic',
       published: 1983,
@@ -41,9 +44,25 @@ const reset = async () => {
       ]
     }
   ])
+
+  const users = await User.create([
+    {
+      username: 'Alison',
+      password: 'password',
+      admin: true
+    },
+    {
+      username: 'Robert',
+      password: 'password',
+    }
+  ]);
+
+  return { books, users };
 }
 
+//make sure this works for users as well
 reset().catch(console.error).then((response) => {
-  console.log(`Seeds successful! ${response.length} records created.`)
+  const numOfRecords = response.books.length + response.users.length;
+  console.log(`Seeds successful! ${numOfRecords} records created.`)
   return mongoose.disconnect()
 })

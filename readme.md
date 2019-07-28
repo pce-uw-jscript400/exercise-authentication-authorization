@@ -54,7 +54,7 @@ To complete this exercise, you will need to do the following:
   * Username is not found
   * Username and password do not match
 
-- [ ] **Add an admin User and a regular user to the `./db/seeds.js` file:** In the `seeds.js` file, when the `reset()` function is run, create a new User who has admin permissions and another User without admin permissions. Make sure that both users will be deleted and then recreated whenever the function is run.
+- [X] **Add an admin User and a regular user to the `./db/seeds.js` file:** In the `seeds.js` file, when the `reset()` function is run, create a new User who has admin permissions and another User without admin permissions. Make sure that both users will be deleted and then recreated whenever the function is run.
 
 - [ ] **Create a `PATCH /api/users/:id/permissions` route:** Create a new route that allows for an admin to change permissions of another user. The route should only be looking for the `admin: <boolean>` key in the request body and setting the value appropriately. On success, return a status 204. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
