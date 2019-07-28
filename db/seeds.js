@@ -3,7 +3,7 @@ const Book = require('../api/models/book')
 const config = require('../nodemon.json')
 
 const reset = async () => {
-  mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true })
+  mongoose.connect(config.env.MONGO_DB, { useNewUrlParser: true })
   await Book.deleteMany() // Deletes all records
   return await Book.create([
     {
