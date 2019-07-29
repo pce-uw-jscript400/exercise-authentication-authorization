@@ -28,6 +28,15 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   const status = 200
   try {
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const payload = jwt.verify(token, SECRET_KEY)
+    const user = await User.findById({ _id: payload.id }).select('-__v -password')
+    console.log(user)
+    if(user.admin != true){
+        const error = new Error('Please contact an admin to perform this task')
+        error.status = 401
+        next(error)
+    }
     const book = await Book.create(req.body)
     if (!book) throw new Error(`Request body failed: ${JSON.stringify(req.body)}`)
     
