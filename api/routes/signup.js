@@ -4,7 +4,6 @@ const bcrypt = require('bcrypt')
 const User = require('../models/user')
 const { sign, verify } = require('jsonwebtoken')
 
-console.log(SECRET_KEY)
 const generateToken = (id) => {
     const payload = { id }
     const options = { expiresIn: '1 day' }
@@ -111,18 +110,51 @@ router.post('/signup', async (req, res, next) => {
  router.patch('/users/:id/permissions', async (req, res, next) =>{
      try {
          const userId = req.params.id
-         const existingUser = await User.findOne({ userId })
+         const updateAdminTo = req.body.admin
+         const token = req.headers.authorization.split('Bearer ')[1]
+
+         const payload = verify(token, SECRET_KEY)
+
+         const loggedInUser = await User.findOne({ _id: payload.id })
+
+         if (!loggedInUser.admin) {
+             // requester is not an admin 401
+            const error = new Error('You do not have admin authorizations')
+            error.status = 401
+            return next (error)
+         }
+
+         if(typeof updateAdminTo !== 'boolean'){
+            const error = new Error(`Admin value incorrect. Please check input`)
+            error.status = 400
+            return next(error)
+         }
+
+         const existingUser = await User.findOneAndUpdate({ _id: userId }, {admin: updateAdminTo}, {new: true})
          if (!existingUser){
             const error = new Error(`User cannot be found.`)
             error.status = 404
             return next(error)
          }
-         if(!existingUser.admin){
 
-         }
+         const status = 204
+         const response = "User Sucessfully Updated"
+         res.json({status, response})
 
-     } catch (error) {
+     } catch (e) {
+        console.error(e)
+        console.log(`Error Name: ${e.name}`)
+        if(e.name === 'JsonWebTokenError'){
+            const e = new Error("Invalid Token")
+            e.status = 404
+            next(e)
+        }
 
+        console.error(e)
+        const message = 'Sorry. An unexpected failure occured.'
+        const error = new Error(message)
+        error.status = 404
+        next(error)
      }
  })
 
