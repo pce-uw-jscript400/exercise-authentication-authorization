@@ -3,6 +3,9 @@ const Book = require('../api/models/book')
 const User = require('../api/models/user')
 const config = require('../nodemon.json')
 
+// Not sure the best way to add the passwords in this file.
+// Tried them unencrypted and that caused problems.
+
 const reset = async () => {
   mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true })
   await Book.deleteMany() // Deletes all records
@@ -43,14 +46,15 @@ const reset = async () => {
       ]
     }
   ])
+  const saltRounds = 10
   const users = await User.create([ 
     {
       username: "user",
-      password: "password"
+      password: "$2b$10$uudM8Q/k8qXrsW99Puwj.evV.0maEhkh2f68/RYcCLdmmmyy7SANS"
     }, 
     {
       username: "superuser",
-      password: "superpassword",
+      password: "$2b$10$tpsmrtGuaoVnD5SoI5qVb.ioGntIx4GcwtWo.hEH1Z2to0NctJwni",
       admin: true
     }, 
   ])
