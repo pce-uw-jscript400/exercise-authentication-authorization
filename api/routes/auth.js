@@ -1,9 +1,9 @@
 const router = require('express').Router()
 const bcrypt = require('bcrypt')
-// const jsonwebtoken = require('jsonwebtoken')
+const jsonwebtoken = require('jsonwebtoken')
 const User = require('../models/user')
 
-// const { SECRET_KEY } = process.env
+const { SECRET_KEY } = process.env
 
 router.post('/signup', async (req, res, next) => {
     const status = 201
@@ -23,8 +23,12 @@ router.post('/signup', async (req, res, next) => {
         throw new Error("Password is less than 8 characters");
 
         const user = await User.create({ username, password: hashed })
-        // const token = generateToken(guest._id)
-        res.status(status).json({ status, user })
+        // Create a JWT
+        const payload = { id: user._id } //set up payload
+        const options = { expiresIn: '1 day' } //set expiration
+        const token = jsonwebtoken.sign(payload, SECRET_KEY, options)
+        // const token = generateToken(user._id)
+        res.status(status).json({ status, token })
     } catch(e) {
         console.error(e)
         const error = new Error(`Account can't be created`)
