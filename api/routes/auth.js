@@ -68,7 +68,7 @@ router.post('/signup', async (req, res, next) => {
         const jwtstatus = 401
         const nullUserStatus = 404
         const adminKeyStatus = 400
-        const token = req.headers.authorization.split('Bearer')[1]
+        const token = req.headers.authorization.split('Bearer ')[1]
         if (!token) throw new Error(`A valid JWT token is not provided ${jwtstatus}`)
 
         const payload = jwt.verify(token, SECRET_KEY)
@@ -80,7 +80,7 @@ router.post('/signup', async (req, res, next) => {
         const userUpdate = await Users.findOne({username})
         if (!userUpdate) throw new Error(`No user found with that ${username}`)
         if(!admin) throw new Error(`The request body does not include an 'admin' key with a boolean value ${adminKeyStatus}`)
-        const response = await Users.push({admin})
+        const response = await Users.save({admin})
         res.status(status).json({ status, response})
       } catch (e){
         console.error(e)
@@ -93,7 +93,8 @@ router.post('/signup', async (req, res, next) => {
 
   router.get('/profile', async (req, res, next) => {
     try {
-      const token = req.headers.authorization.split('Bearer')[1]
+      const token = req.headers.authorization.split('Bearer ')[1]
+    //   const secret = new Buffer.alloc(SECRET_KEY, "base64")
       const payload = jwt.verify(token, SECRET_KEY)
       const user = await Users.findOne({ _id: payload.id }).select('-__v -password')
       const status = 200
