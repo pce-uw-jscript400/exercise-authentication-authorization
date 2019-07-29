@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const bcryt = require('bcrypt')
-const jsonwebtoken = require('jsonwebtoken')
+const { sign, verify} = require('jsonwebtoken')
 const User = require('../models/user')
 
 const { SECRET_KEY } = process.env
@@ -38,16 +38,46 @@ router.post('/signup', async (req, res, next) => {
         if (!user) throw new Error(`User could not be found.`)
         const payload = { id: user._id } // Set up payload
         const options = { expiresIn: '1 day' } // Sets expiration
-        const token = jsonwebtoken.sign(payload, SECRET_KEY, options)
+        const token = sign(payload, SECRET_KEY, options)
         const isValid = await bcryt.compare(password, user.password)
         if (!isValid) throw new Error(`Username and password do not match`)
-        res.status(status).json({ status, response: `You have been logged in.`})
+        res.status(status).json({ status, token, response: `You have been logged in.`})
     } catch (e) {
         console.error(e)
         const error = e
         error.status = 400
         next(error)
     }
+})
+
+router.patch('/users/:id/permissions', async (req, res, next) => {
+    
+    const status = 201
+    const { id } = req.params
+    const { admin } = req.body
+    try {
+        const token = req.headers.authorization.split('Bearer ')[1]
+        const payload = verify(token, SECRET_KEY)
+        if (!payload) throw new Error(`A valid JWT token is not provided.`)
+
+        const checkAdmin = await User.findOne({ _id: payload.id }).select(`admin`)
+        if (!checkAdmin) throw new Error(`The JWT token is for a user who is not an admin.`)
+        
+        user = await User.findOne({ id })
+        if (!admin) throw new Error(`User cannot be found.`)
+        
+        if (!user) throw new Error(`The request body does not include an admin key with a boolean value.`)
+ 
+        user.admin = true
+        await user.save()
+        const response = await User.findById(user._id).select('-__v')
+        res.json({ status, response })
+    } catch (e) {
+        console.error(e)
+        const error = e
+        error.status = 401
+        next(error)
+      }
 })
 
 module.exports = router
