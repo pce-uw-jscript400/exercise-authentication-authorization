@@ -14,10 +14,9 @@ router.post('/signup', async (req, res, next) => {
         if (user) throw new Error(`User ${username} already taken.`)
         if (!username) throw new Error(`Username is not provided!`)
 
-        // Had issues getting the compare to work
-        await bcrypt.compare(password, (err, res) =>{
-            if(res) throw new Error(`User password already taken`)
-        })
+        const isValid = (password.length > 8)
+        // If validation fails, throw and error
+        if (!isValid) throw new Error('Password must be 8 characters or more.')
 
         if (!password) throw new Error(`Password is not provided!`)
         const saltRounds = 10
@@ -47,7 +46,7 @@ router.post('/signup', async (req, res, next) => {
           //if it does exist, compare the plain text password to the hashed version
           const isValid = await bcrypt.compare(password, user.password)
           // If validation fails, throw and error
-          if (!isValid) throw new Error('Password is invalid')
+          if (!isValid) throw new Error('Username and password do not match')
 
           // Create a JWT
           const payload = { id: user._id } // Setup payload
@@ -63,12 +62,40 @@ router.post('/signup', async (req, res, next) => {
       }
   })
 
+  router.patch('/api/users/:id/permissions', async (req, res, next) => {
+    const status = 204
+      try {
+        const jwtstatus = 401
+        const nullUserStatus = 404
+        const adminKeyStatus = 400
+        const token = req.headers.authorization.split('Bearer')[1]
+        if (!token) throw new Error(`A valid JWT token is not provided ${jwtstatus}`)
+
+        const payload = jwt.verify(token, SECRET_KEY)
+        const user = await Users.findOne({ _id: payload.id }).select('-__v -password')
+        if (user.admin != true) throw new Error(`The JWT token is for a user who is not an admin ${jwtstatus}`)
+        if (!user) throw new Error(`User cannot be found ${nullUserStatus}`)
+
+        const {username, admin} = req.body
+        const userUpdate = await Users.findOne({username})
+        if (!userUpdate) throw new Error(`No user found with that ${username}`)
+        if(!admin) throw new Error(`The request body does not include an 'admin' key with a boolean value ${adminKeyStatus}`)
+        const response = await Users.push({admin})
+        res.status(status).json({ status, response})
+      } catch (e){
+        console.error(e)
+        const error = new Error('You are not authorized to access this route.')
+        error.status = 401
+        next(error)
+      }
+    
+  })
+
   router.get('/profile', async (req, res, next) => {
     try {
-      const token = req.headers.authorization.split('Bearer ')[1]
+      const token = req.headers.authorization.split('Bearer')[1]
       const payload = jwt.verify(token, SECRET_KEY)
       const user = await Users.findOne({ _id: payload.id }).select('-__v -password')
-
       const status = 200
       res.json({ status, user })  
     } catch (e) {
