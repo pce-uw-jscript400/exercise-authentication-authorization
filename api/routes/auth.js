@@ -72,4 +72,36 @@ router.post("/login", async (req, res, next) => {
   }
 });
 
+// Admin should be able to change permissions for other users
+router.patch("/users/:id/permissions", async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      const error = new Error(`User cannot be found`);
+      error.message = 404;
+      return next(error);
+    }
+
+    // user.admin = true;
+    const AdminStatus = user.admin;
+    if (AdminStatus === true) {
+      user.admin = false;
+    } else {
+      user.admin = true;
+    }
+
+    console.log("### USER", user);
+    console.log("### USER", user.admin.status);
+    // Update the user permissions for the current user
+    await user.save();
+
+    const response = await User.findById(user._id).select("-__v");
+    const status = 204;
+    res.json({ status, response });
+  } catch (e) {
+    console.error(e);
+  }
+});
+
 module.exports = router;
