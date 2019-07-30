@@ -20,7 +20,7 @@ router.post('/signup', async (req,res,next) => {
       password: hashedPw,
       admin
     })
-    const payload = { id: response._id, admin: response.admin }
+    const payload = { _id: response._id, admin: response.admin }
     const options = { expiresIn: '1 day' }
     const token = jsonwebtoken.sign(payload, SECRET_KEY, options)
 
@@ -42,11 +42,15 @@ router.post('/login', async (req,res,next) => {
   try {
     const {username, password} = req.body
     const user = await User.findOne({username}).select('-__v -password')
-    if (!user) throw new Error(`User ${username} could not be found`)
+    if (!user) {
+      const error =  new Error(`User ${username} could not be found`)
+      error.status = 404
+      return next(error)
+    }
     const validated = bcrypt.compare(password, user.password)
     if (!validated) throw new Error(`Username and password do not match`)
     
-    const payload = { id: user._id, admin: user.admin }
+    const payload = { _id: user._id, admin: user.admin }
     const options = { expiresIn: '1 day' }
     const token = jsonwebtoken.sign(payload, SECRET_KEY, options)
 
@@ -67,11 +71,25 @@ router.post('/login', async (req,res,next) => {
 router.patch('/users/:id/permissions', (req, res, next) => {
   try {
     const status = 204
-    if (!req.headers.authorization) throw new Error('Unauthorized')
+    if (req.body.admin == undefined) {
+      const error = new Error('Request body is malformed')
+      error.status = 400
+      return next(error)
+    }
+    if (!req.headers.authorization) {
+      const error = new Error('Unauthorized')
+      error.status = 401
+      return next(error)
+    }
     const token = req.headers.authorization.split('Bearer ')[1]
     const payload = jsonwebtoken.verify(token, SECRET_KEY)
-    if (!payload.admin) throw new Error('Unauthorized')
-    const response = User.findByIdAndUpdate(payload.id, {$set: {admin: req.body.admin}}, {new: true})
+    if (!payload.admin) {
+      const error = new Error('Unauthorized')
+      error.status = 401
+      return next(error)
+    }
+    // 404 will be handled by mongoose if the id is not found...
+    const response = User.findByIdAndUpdate(payload._id, {$set: {admin: req.body.admin}}, {new: true})
     res.json({status, response})
   } catch (e) {
     console.log(e)

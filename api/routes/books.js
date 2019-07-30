@@ -1,5 +1,9 @@
 const router = require('express').Router()
+const bcrypt = require('bcrypt')
+const jsonwebtoken = require('jsonwebtoken')
+const {SECRET_KEY} = process.env
 const Book = require('../models/book')
+const User = require('../models/user')
 
 router.get('/', async (req, res, next) => {
   const status = 200
@@ -44,21 +48,33 @@ router.post('/', async (req, res, next) => {
 
 // You should only be able to reserve a book if a user is logged in
 router.patch('/:id/reserve', async (req, res, next) => {
-  const { id } = req.params
+  const { bookId } = req.params
   try {
-    const book = await Book.findById(id)
-    if (!book) {
-      const error = new Error(`Invalid Book _id: ${id}`)
-      error.message = 404
+    const status = 200
+    if (!req.headers.authorization) {
+      const error = new Error('Unauthorized')
+      error.status = 401
       return next(error)
     }
-
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const payload = jsonwebtoken.verify(token, SECRET_KEY)
+    const book = await Book.findById(bookId)
+    if (!book) {
+      const error = new Error(`Invalid Book _id: ${id}`)
+      error.status = 404
+      return next(error)
+    }
+    if (book.reserved.status == true) {
+      const error = new Error('This book is already reserved.')
+      error.status = 400
+      return next(error)
+    }
     book.reserved.status = true
-    // Set the reserved memberId to the current user
+    book.reserved.memberId = payload._id
     await book.save()
     
     const response = await Book.findById(book._id).select('-__v')
-    const status = 200
+    
     res.json({ status, response })
   } catch (e) {
     console.error(e)
@@ -68,11 +84,42 @@ router.patch('/:id/reserve', async (req, res, next) => {
 // You should only be able to return a book if the user is logged in
 // and that user is the one who reserved the book
 router.patch('/:id/return', async (req, res, next) => {
-  const status = 200
-  const message = 'You must implement this route!'
-  
-  console.log(message)
-  res.status(status).json({ status, message })
+  const { bookId } = req.params
+  try {
+    const status = 200
+    if (!req.headers.authorization) {
+      const error = new Error('Unauthorized')
+      error.status = 401
+      return next(error)
+    }
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const payload = jsonwebtoken.verify(token, SECRET_KEY)
+    const book = await Book.findById(bookId)
+    if (!book) {
+      const error = new Error(`Invalid Book _id: ${id}`)
+      error.status = 404
+      return next(error)
+    }
+    if (book.reserved.status == false) {
+      const error = new Error('This book is not reserved.')
+      error.status = 400
+      return next(error)
+    }
+    if (book.reserved.memberId != payload._id) {
+      const error = new Error(`This book is not reserved by this member`)
+      error.status = 401
+      return next(error)
+    }
+    book.reserved.status = false
+    book.reserved.memberId = null
+    await book.save()
+    
+    const response = await Book.findById(book._id).select('-__v')
+    
+    res.json({ status, response })
+  } catch (e) {
+    console.error(e)
+  } 
 })
 
 module.exports = router

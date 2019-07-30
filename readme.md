@@ -64,12 +64,12 @@ To complete this exercise, you will need to do the following:
 
 - [x] **Update the `POST /api/books` route:** This route should only be available to users who are admins. If the user is an admin, proceed as normal. If they are not an admin, return an error message with a status code of 401.
 
-- [ ] **Update the `POST /api/books/:id/reserve` route:** This route allows for someone to reserve a book. If the user is logged in, proceed as normal. You should return an error in the following cases:
+- [x] **Update the `POST /api/books/:id/reserve` route:** This route allows for someone to reserve a book. If the user is logged in, proceed as normal. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
   * The book is already reserved (status 400)
   * Book cannot be found (status 404)
 
-- [ ] **Create a `PATCH /api/books/:id/return` route:** This route should return a book if the user has already reserved it. If the appropriate user is returning the book, set the `reserved.status` to `false` and update the `reserved.memberId` to be `null`. You should return an error in the following cases:
+- [x] **Create a `PATCH /api/books/:id/return` route:** This route should return a book if the user has already reserved it. If the appropriate user is returning the book, set the `reserved.status` to `false` and update the `reserved.memberId` to be `null`. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
   * The book is reserved by a different user (status 401)
   * The book is not reserved (status 400)
