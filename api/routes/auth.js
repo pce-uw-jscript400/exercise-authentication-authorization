@@ -27,14 +27,15 @@ router.get("/profile", async (req, res, next) => {
 router.post("/signup", async (req, res, next) => {
   const status = 201;
   try {
-    const { username, password } = req.body;
+    const { username, password, admin } = req.body;
     const user = await User.findOne({ username });
     if (user) throw new Error(`User ${username} already exists.`);
 
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const response = await User.create({
       username,
-      password: hashedPassword
+      password: hashedPassword,
+      admin
     });
     res.status(status).json({ status, response });
   } catch (error) {

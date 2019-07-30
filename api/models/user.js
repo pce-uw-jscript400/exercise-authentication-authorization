@@ -6,4 +6,4 @@ const schema = mongoose.Schema({
   admin: { type: Boolean, default: false }
 });
 
-module.exports = mongoose.model("Guest", schema);
+module.exports = mongoose.model("User", schema);
