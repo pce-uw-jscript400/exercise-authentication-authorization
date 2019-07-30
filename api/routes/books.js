@@ -17,12 +17,12 @@ router.get('/:id', async (req, res, next) => {
   const status = 200
   try {
     const response = await Book.findById(id).select('-__v')
-    if (!response) throw new Error(`Invalid Book _id: ${id}`)
+    if (!response) throw new Error('Invalid Book _id: ${id}')
 
     res.json({ status, response })
   } catch (e) {
     console.error(e)
-    const error = new Error(`Cannot find book with id ${id}.`)
+    const error = new Error('Cannot find book with id ${id}.')
     error.status = 404
     next(error)
   }
@@ -60,33 +60,91 @@ router.post('/', async (req, res, next) => {
 router.patch('/:id/reserve', async (req, res, next) => {
   const { id } = req.params
   try {
-    const book = await Book.findById(id)
-    if (!book) {
-      const error = new Error(`Invalid Book _id: ${id}`)
-      error.message = 404
-      return next(error)
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const payload = jsonwebtoken.verify(token, SECRET_KEY)
+    if (payload) { //if payload (token verification) returns true, cont.
+      const book = await Book.findById(id)
+      if (book) { // if book exists, cont
+        if (book.reserved.status) { //if book status is available
+          book.reserved.status = true
+          book.reserved.memberId = payload.id
+          await book.save()
+
+          const response = await Book.findById(book._id).select('-__v')
+          const status = 200
+          res.json({ status, response })
+
+        } else {
+          const error = new Error('Book _id: ${id} is already reserved')
+          error.message = 400
+          return next(error)
+        }
+
+      } else {
+        const error = new Error('Invalid Book _id: ${id}')
+        error.message = 404
+        return next(error)
+      }
+
+    } else {
+      const e = new Error('Invalid token')
+      e.status = 401
+      next(e)
     }
 
-    book.reserved.status = true
-    // Set the reserved memberId to the current user
-    await book.save()
-
-    const response = await Book.findById(book._id).select('-__v')
-    const status = 200
-    res.json({ status, response })
-  } catch (e) {
-    console.error(e)
+  } catch (error) {
+    const e = new Error(error)
+    e.status = 404
+    next(e)
   }
 })
 
 // You should only be able to return a book if the user is logged in
 // and that user is the one who reserved the book
 router.patch('/:id/return', async (req, res, next) => {
-  const status = 200
-  const message = 'You must implement this route!'
+  const { id } = req.params
+  try {
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const payload = jsonwebtoken.verify(token, SECRET_KEY)
+    if (payload) { //if payload (token verification) returns true, cont.
+      const book = await Book.findById(id)
+      if (book) { // if book exists, cont
+        if (book.reserved.memberId === payload.id) { //if member ids match, cont.
+          if (!book.reserved.status) { //if book was already checked out, cont.
+            book.reserved.status = false
+            book.reserved.memberId = null
+            await book.save()
 
-  console.log(message)
-  res.status(status).json({ status, message })
+            const response = await Book.findById(book._id).select('-__v')
+            const status = 200
+            res.json({ status, response })
+
+          } else {
+            const error = new Error('Book _id: ${id} is not checked out')
+            error.message = 400
+            return next(error)
+          }
+        } else {
+          const error = new Error('Book _id: ${id} is checked out by a different member')
+          error.message = 401
+          return next(error)
+        }
+      } else {
+        const error = new Error('Invalid Book _id: ${id}')
+        error.message = 404
+        return next(error)
+      }
+    } else {
+      const e = new Error('Invalid token')
+      e.status = 401
+      next(e)
+    }
+
+  } catch (error) {
+    const e = new Error(error)
+    e.status = 404
+    next(e)
+  }
 })
 
 module.exports = router
