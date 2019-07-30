@@ -17,6 +17,11 @@ const schema = new mongoose.Schema({
     type: String,
     required: true
   }
-}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
+}, {
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  }
+})
 
 module.exports = mongoose.model('Book', schema)
