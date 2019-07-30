@@ -1,7 +1,7 @@
 const User = require('../models/user');
 const router = require('express').Router();
 const { SECRET_KEY } = process.env;
-var jsonwebtoken = require('jsonwebtoken');
+const jsonwebtoken = require('jsonwebtoken');
 
 
 //These values are hard-coded while the jwt isn't working for me
@@ -29,6 +29,7 @@ router.patch('/:id/permissions', async(req, res, next) => {
         // const token = req.headers.authorization.split('Bearer ')[1];
         // TODO: Get this working and replace hard-coded jwtAdmin/jwtNonAdmin with payload.admin
         // const payload = jsonwebtoken.verify(token, SECRET_KEY);
+        // console.log('payload', payload);
 
         const isAdmin = jwtAdmin.admin;
         // const isAdmin = jwtNonAdmin.admin;
@@ -39,8 +40,11 @@ router.patch('/:id/permissions', async(req, res, next) => {
         //TODO: make this return a 400 and better error message
         if(!req.body.hasOwnProperty('admin')) throw new Error('No Admin Information');
 
-        //TODO: if no User found --> 404
+        //make this throw this error and the status 404
+        //does this need to be wrapped in another try-catch block?
         const user = await User.findById({ _id: req.params.id});
+        if(!user) throw new Error('No user found with this ID');
+        error.status = 404;
 
         user.admin = req.body.admin;
         user.save();
