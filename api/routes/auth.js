@@ -21,7 +21,7 @@ router.post("/signup", async (req, res, next) => {
     res.status(status).json({ status, response });
   } catch (error) {
     console.log(error);
-    const e = new Error("We can't let you in.");
+    const e = new Error(`User ${username} already exists.`);
     e.status = 400;
     next(e);
   }
@@ -52,37 +52,6 @@ router.post("/login", async (req, res, next) => {
     next(e);
   }
 });
-
-// Admin should be able to change permissions for other users
-// router.patch("/users/:id/permissions", async (req, res, next) => {
-//   const { id } = req.params;
-
-//   try {
-//     const user = await User.findById(id);
-//     if (!user) {
-//       const error = new Error(`User cannot be found`);
-//       error.message = 404;
-//       return next(error);
-//     }
-
-//     // This works, but an Admin can change an Admin per
-//     const AdminStatus = user.admin;
-//     if (AdminStatus === true) {
-//       user.admin = false;
-//     } else {
-//       user.admin = true;
-//     }
-
-//     // Update the user permissions for the current user
-//     await user.save();
-
-//     const response = await User.findById(user._id).select("-__v");
-//     const status = 204;
-//     res.json({ status, response });
-//   } catch (e) {
-//     console.error(e);
-//   }
-// });
 
 // Admin should be able to change permissions for other users
 // NOTE: Can't get this working...come back to it.
@@ -146,7 +115,6 @@ router.patch("/users/:id/permissions", async (req, res, next) => {
       return next(error);
     }
 
-    // This works, but an Admin can change an Admin per
     const AdminStatus = user.admin;
     if (AdminStatus === true) {
       user.admin = false;
