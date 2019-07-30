@@ -3,26 +3,7 @@ const jsonwebtoken = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 const User = require("../models/user");
-
 const { SECRET_PW } = process.env;
-
-router.get("/profile", async (req, res, next) => {
-  try {
-    const token = req.headers.authorization.split("Bearer ")[1];
-    const payload = jsonwebtoken.verify(token, SECRET_PW);
-    const user = await User.findOne({ _id: payload.id }).select(
-      "-__v -password"
-    );
-
-    const status = 200;
-    res.json({ status, user });
-  } catch (e) {
-    console.error(e);
-    const error = new Error("You are not authorized to access this route.");
-    error.status = 401;
-    next(error);
-  }
-});
 
 router.post("/signup", async (req, res, next) => {
   const status = 201;
@@ -73,17 +54,99 @@ router.post("/login", async (req, res, next) => {
 });
 
 // Admin should be able to change permissions for other users
+// router.patch("/users/:id/permissions", async (req, res, next) => {
+//   const { id } = req.params;
+
+//   try {
+//     const user = await User.findById(id);
+//     if (!user) {
+//       const error = new Error(`User cannot be found`);
+//       error.message = 404;
+//       return next(error);
+//     }
+
+//     // This works, but an Admin can change an Admin per
+//     const AdminStatus = user.admin;
+//     if (AdminStatus === true) {
+//       user.admin = false;
+//     } else {
+//       user.admin = true;
+//     }
+
+//     // Update the user permissions for the current user
+//     await user.save();
+
+//     const response = await User.findById(user._id).select("-__v");
+//     const status = 204;
+//     res.json({ status, response });
+//   } catch (e) {
+//     console.error(e);
+//   }
+// });
+
+// Admin should be able to change permissions for other users
+// NOTE: Can't get this working...come back to it.
+// router.patch("/users/:id/permissions", async (req, res, next) => {
+//   const { id } = req.params;
+
+//   try {
+//     const token = req.headers.authorization.split("Bearer ")[1];
+//     const payload = jsonwebtoken.verify(token, SECRET_PW);
+//     const user = await User.findOne({ _id: payload.id }).select(
+//       "-__v -password"
+//     );
+//     const isAdminUser = user.admin;
+
+//     if (!isAdminUser) {
+//       const error = new Error(
+//         "The JWT token is for a user who is not an admin."
+//       );
+//       error.message = 401;
+//       return next(error);
+//     }
+
+//     if (!user) {
+//       const error = new Error("User cannot be found.");
+//       error.message = 404;
+//       return next(error);
+//     }
+
+//     const response = await User.findByIdAndUpdate(
+//       id,
+//       { admin: req.body.admin },
+//       { new: true }
+//     );
+//     const status = 204;
+//     res.json({ status, response });
+//   } catch (e) {
+//     console.error(e);
+//   }
+// });
+
 router.patch("/users/:id/permissions", async (req, res, next) => {
-  const { id } = req.params;
   try {
-    const user = await User.findById(id);
+    const token = req.headers.authorization.split("Bearer ")[1];
+    const payload = jsonwebtoken.verify(token, SECRET_PW);
+    const user = await User.findOne({ _id: payload.id }).select(
+      "-__v -password"
+    );
+    const isAdminUser = user.admin;
+
+    if (!isAdminUser) {
+      const error = new Error(
+        "The JWT token is for a user who is not an admin."
+      );
+      error.message = 401;
+      return next(error);
+    }
+
     if (!user) {
-      const error = new Error(`User cannot be found`);
+      const error = new Error("User cannot be found.");
       error.message = 404;
       return next(error);
     }
 
-    // user.admin = true;
+    // This works, but an Admin can change an Admin per
     const AdminStatus = user.admin;
     if (AdminStatus === true) {
       user.admin = false;
@@ -91,8 +154,6 @@ router.patch("/users/:id/permissions", async (req, res, next) => {
       user.admin = true;
     }
 
-    console.log("### USER", user);
-    console.log("### USER", user.admin.status);
     // Update the user permissions for the current user
     await user.save();
 
