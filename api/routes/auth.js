@@ -54,7 +54,7 @@ router.post('/login', async (req, res, next)=> {
 
         const payload = { id: guest._id }
         const options = { expiresIn: '1 day' }
-        const token = jsonwebtoken.sign(paylod, SECRET_KEY, options)
+        const token = jsonwebtoken.sign(payload, SECRET_KEY, options)
         res.status(status).json({status, token})
     } catch (e) {
         e.status = 401
@@ -62,5 +62,44 @@ router.post('/login', async (req, res, next)=> {
     }
 })
 
+router.patch('/users/:id/permissions', async (req, res, next) => {
+    const status = 204
+    try {
+        //make sure request body is OK - 400
+        const { permissions } = req.body
+        const { id } = req.params
+        if ( permissions !== (true || false)) throw new Error (`There was a problem with your request body`)
+
+        //make sure headers contain auth - 401
+        const token = req.headers.authorization.split('Bearer ')[1]
+        if (!token) throw new Error(`There was a problem with your request`)
+        const payload = jsonwebtoken.verify(token, SECRET_KEY)
+
+        const user = await User.findOne({ _id: payload.id }).select('-__v -password')
+        //make sure request maker is an admin - 401
+        const { admin } = user 
+        if (admin !== true) throw new Error(`There was a problem with your request`)
+
+        //make sure user exists - 404
+        const updatedUser = await User.findOne({_id: id})
+        if (!updatedUser) throw new Error(`User ID: ${id} does not exist!`)
+
+        //need to verify this and make sure it is correct way to do..
+        updatedUser.admin = permissions
+        await updatedUser.save()
+
+        res.status(status).json({status})
+
+    } catch (e) {
+        if (e.message == 'There was a problem with your request body') {
+            e.status = 400
+        } else if (e.message == 'There was a problem with your request') {
+            e.status = 401
+        } else {
+            e.status = 404
+        }
+        next(e)
+    }
+})
 
 module.exports = router

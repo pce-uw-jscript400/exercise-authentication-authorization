@@ -56,20 +56,20 @@ To complete this exercise, you will need to do the following:
 
 - [x] **Add an admin User and a regular user to the `./db/seeds.js` file:** In the `seeds.js` file, when the `reset()` function is run, create a new User who has admin permissions and another User without admin permissions. Make sure that both users will be deleted and then recreated whenever the function is run.
 
-- [ ] **Create a `PATCH /api/users/:id/permissions` route:** Create a new route that allows for an admin to change permissions of another user. The route should only be looking for the `admin: <boolean>` key in the request body and setting the value appropriately. On success, return a status 204. You should return an error in the following cases:
+- [x] **Create a `PATCH /api/users/:id/permissions` route:** Create a new route that allows for an admin to change permissions of another user. The route should only be looking for the `admin: <boolean>` key in the request body and setting the value appropriately. On success, return a status 204. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
   * The JWT token is for a user who is not an admin (status 401)
   * User cannot be found (status 404)
   * The request body does not include an `admin` key with a boolean value (status 400)
 
-- [ ] **Update the `POST /api/books` route:** This route should only be available to users who are admins. If the user is an admin, proceed as normal. If they are not an admin, return an error message with a status code of 401.
+- [x] **Update the `POST /api/books` route:** This route should only be available to users who are admins. If the user is an admin, proceed as normal. If they are not an admin, return an error message with a status code of 401.
 
-- [ ] **Update the `POST /api/books/:id/reserve` route:** This route allows for someone to reserve a book. If the user is logged in, proceed as normal. You should return an error in the following cases:
+- [x] **Update the `POST /api/books/:id/reserve` route:** This route allows for someone to reserve a book. If the user is logged in, proceed as normal. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
   * The book is already reserved (status 400)
   * Book cannot be found (status 404)
 
-- [ ] **Create a `PATCH /api/books/:id/return` route:** This route should return a book if the user has already reserved it. If the appropriate user is returning the book, set the `reserved.status` to `false` and update the `reserved.memberId` to be `null`. You should return an error in the following cases:
+- [x] **Create a `PATCH /api/books/:id/return` route:** This route should return a book if the user has already reserved it. If the appropriate user is returning the book, set the `reserved.status` to `false` and update the `reserved.memberId` to be `null`. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
   * The book is reserved by a different user (status 401)
   * The book is not reserved (status 400)
