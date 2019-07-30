@@ -34,7 +34,6 @@ router.post('/signup', async (req, res, next) => {
     try {
         const { username, password } = req.body 
         const user = await User.findOne({ username })
-        console.log(user)
         if (!user) throw new Error(`User could not be found.`)
         const payload = { id: user._id } // Set up payload
         const options = { expiresIn: '1 day' } // Sets expiration
@@ -54,23 +53,26 @@ router.patch('/users/:id/permissions', async (req, res, next) => {
     
     const status = 201
     const { id } = req.params
-    const { admin } = req.body
+    const { adminUpdate } = req.body
     try {
         const token = req.headers.authorization.split('Bearer ')[1]
         const payload = verify(token, SECRET_KEY)
         if (!payload) throw new Error(`A valid JWT token is not provided.`)
 
-        const checkAdmin = await User.findOne({ _id: payload.id }).select(`admin`)
-        if (!checkAdmin) throw new Error(`The JWT token is for a user who is not an admin.`)
+        const checkAdmin = await User.findOne({ _id: payload.id })
+        if (!checkAdmin.admin) throw new Error(`The JWT token is for a user who is not an admin.`)
         
-        user = await User.findOne({ id })
-        if (!admin) throw new Error(`User cannot be found.`)
+        if (typeof admin !== 'boolean') throw new Error(`The request body does not include an admin key with a boolean value.`)
         
-        if (!user) throw new Error(`The request body does not include an admin key with a boolean value.`)
- 
-        user.admin = true
-        await user.save()
-        const response = await User.findById(user._id).select('-__v')
+        try {
+            user = await User.findOneAndUpdate({ _id: id }, { admin: adminUpdate }, { new: true })
+        } catch (e) {
+            const error = new Error(`User cannot be found.`)
+            error.status = 404
+            return next(error)
+        }
+
+        const response = `User given administrative privileges`
         res.json({ status, response })
     } catch (e) {
         console.error(e)
