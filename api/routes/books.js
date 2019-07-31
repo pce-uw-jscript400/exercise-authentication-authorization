@@ -1,5 +1,7 @@
 const router = require('express').Router()
+const jsonwebtoken = require('jsonwebtoken')
 const Book = require('../models/book')
+const User = require('../models/user')
 
 router.get('/', async (req, res, next) => {
   const status = 200
@@ -28,12 +30,19 @@ router.get('/:id', async (req, res, next) => {
 router.post('/', async (req, res, next) => {
   const status = 200
   try {
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const payload = jsonwebtoken.verify(token, 'ASECRETPASSCODE')
+    const user = await User.findOne({ _id: payload.id })
+    if (user.admin === false) {
+      throw new Error('You must be an admin')
+    }
+    else {
     const book = await Book.create(req.body)
     if (!book) throw new Error(`Request body failed: ${JSON.stringify(req.body)}`)
     
     const response = await Book.findById(book._id).select('-__v')
     res.json({ status, response })
-  } catch (e) {
+  }} catch (e) {
     console.error(e)
     const message = 'Failure to create. Please check request body and try again.'
     const error = new Error(message)
@@ -46,7 +55,12 @@ router.post('/', async (req, res, next) => {
 router.patch('/:id/reserve', async (req, res, next) => {
   const { id } = req.params
   try {
+    if (req.headers.authorization === null) {
+      throw new Error('You must be logged in')
+    }
+    else {
     const book = await Book.findById(id)
+    
     if (!book) {
       const error = new Error(`Invalid Book _id: ${id}`)
       error.message = 404
@@ -60,7 +74,7 @@ router.patch('/:id/reserve', async (req, res, next) => {
     const response = await Book.findById(book._id).select('-__v')
     const status = 200
     res.json({ status, response })
-  } catch (e) {
+  }} catch (e) {
     console.error(e)
   }
 })

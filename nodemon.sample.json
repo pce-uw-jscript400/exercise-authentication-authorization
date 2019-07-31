@@ -1,6 +1,6 @@
 {
   "env": {
-    "MONGO_DB_CONNECTION": "",
+    "MONGO_DB_CONNECTION": "mongodb+srv://jt-user1:KeRHniXmgkUBZx4l@cluster0-ya0qa.mongodb.net/test?retryWrites=true&w=majority",
     "NODE_ENV": "development",
     "PORT": 5000
   }
