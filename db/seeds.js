@@ -1,11 +1,12 @@
 const mongoose = require('mongoose')
 const Book = require('../api/models/book')
+const User = require('../api/models/user')
 const config = require('../nodemon.json')
 
 const reset = async () => {
   mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true })
   await Book.deleteMany() // Deletes all records
-  return await Book.create([
+  const response1 = await Book.create([
     {
       title: 'The Colour of Magic',
       published: 1983,
@@ -39,6 +40,18 @@ const reset = async () => {
           dob: '04-28-1948'
         }
       ]
+    }
+  ])
+  await User.deleteMany()
+  return await User.create([
+    {
+      user:'Tom Smith',
+      password: 'jy8M@wqH3'
+    },
+    {
+      user:'AppAdmin',
+      password: 'jy8M@wqH3',
+      admin: true
     }
   ])
 }
