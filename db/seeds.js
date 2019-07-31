@@ -41,6 +41,16 @@ const reset = async () => {
       ]
     }
   ])
+
+  const users = await users.create([
+    {
+      username: 'Sarah',
+      passowrd: 'password',
+      admin: true
+    }
+  ])
+
+  return {users}
 }
 
 reset().catch(console.error).then((response) => {
