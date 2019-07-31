@@ -84,6 +84,7 @@ router.patch('/:id/reserve', async (req, res, next) => {
 
 
     book.reserved.status = true
+    book.reserved.memberID = user.id
     // Set the reserved memberId to the current user
     await book.save()
     
@@ -98,10 +99,14 @@ router.patch('/:id/reserve', async (req, res, next) => {
 // You should only be able to return a book if the user is logged in
 // and that user is the one who reserved the book
 router.patch('/:id/return', async (req, res, next) => {
-  
-  const status = 200
-  const message = 'You must implement this route!'
-  
+  const token = req.headers.authorization.split('Bearer ')[1]
+  // const secret = new Buffer.alloc(SECRET_KEY, "base64")
+  const payload = jwt.verify(token, SECRET_KEY)
+  const user = await Users.findOne({ _id: payload.id }).select('-__v -password')
+
+  const book = await Book.findById(id)
+
+   
   console.log(message)
   res.status(status).json({ status, message })
 })

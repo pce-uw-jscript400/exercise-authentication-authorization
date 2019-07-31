@@ -3,8 +3,6 @@ const jwt = require('jsonwebtoken')
 const Users = require('../models/users')
 const bcrypt = require('bcrypt')
 
-const { SECRET_KEY } = process.env
-
 router.post('/signup', async (req, res, next) => {
     const status = 201
     try{
