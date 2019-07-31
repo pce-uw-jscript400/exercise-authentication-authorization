@@ -62,17 +62,17 @@ router.post('/', async (req, res, next) => {
 // You should only be able to reserve a book if a user is logged in
 router.patch('/:id/reserve', async (req, res, next) => {
   const { id } = req.params
+  const status = 200
+  const token = req.headers.authorization.split('Bearer ')[1]
+  //make sure token exists
+  if (!token) {
+    const error = new Error (`You are not authorized`)
+    error.status = 401
+    return next(error)
+  }
+  //try/catch
   try {
-    const token = req.headers.authorization.split('Bearer ')[1]
-    //make sure token exists
-    if (!token) {
-      const error = new Error (`You are not authorized`)
-      error.status = 401
-      return next(error)
-    }
-    //try/catch this?
     const payload = jsonwebtoken.verify(token, SECRET_KEY)
-
     const user = await User.findById(payload.id)
 
     const book = await Book.findById(id)
@@ -92,13 +92,13 @@ router.patch('/:id/reserve', async (req, res, next) => {
     await book.save()
     
     const response = await Book.findById(book._id).select('-__v')
-    const status = 200
-    res.json({ status, response })
   } catch (e) {
-    //what to put here?
     console.error(e)
-    //next (e)?
+    e.status = 401
+    next(e)
   }
+
+  res.json({ status, response })
 })
 
 // You should only be able to return a book if the user is logged in

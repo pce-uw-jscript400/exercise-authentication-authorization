@@ -15,20 +15,21 @@ router.post('/signup', async (req,res, next) => {
         if (password.length < 8) throw new Error(`Please choose a longer password`)
 
         const guest = await User.findOne({username})
+
         //if user already exists, throw error
         if (guest) throw new Error(`User: ${username} already exists!`)
         
         //store user in database
         const saltRounds = 10
         const hashed = await bcrypt.hash(password, saltRounds)
-        await User.create({
+        const user = await User.create({
             username,
             password: hashed
         })
         console.log(`User ${username} created!`)
 
         //return success
-        const payload = { id: guest._id } //setup payload
+        const payload = { id: user._id } //setup payload
         const options = { expiresIn: '1 day' } //add expiration
         const token = jsonwebtoken.sign(payload, SECRET_KEY, options) //create token
 
