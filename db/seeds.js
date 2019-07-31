@@ -1,10 +1,25 @@
-const mongoose = require('mongoose')
-const Book = require('../api/models/book')
-const config = require('../nodemon.json')
+const mongoose = require('mongoose');
+const User = require('../api/models/user');
+const Book = require('../api/models/book');
+const config = require('../nodemon.json');
+const bcrypt = require('bcrypt');
 
 const reset = async () => {
-  mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true })
-  await Book.deleteMany() // Deletes all records
+  mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true });
+  await Book.deleteMany(); // Deletes all records
+  await User.deleteMany(); // Deletes all records
+  const password = "password"
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+  await User.create([{
+    username: "basicUser",
+    password: hashedPassword,
+    admin: false
+  }, {
+    username: "powerUser",
+    password: hashedPassword,
+    admin: true
+  }]);
   return await Book.create([
     {
       title: 'The Colour of Magic',
@@ -40,10 +55,10 @@ const reset = async () => {
         }
       ]
     }
-  ])
+  ]);
 }
 
 reset().catch(console.error).then((response) => {
-  console.log(`Seeds successful! ${response.length} records created.`)
-  return mongoose.disconnect()
-})
+  console.log(`Seeds successful! ${response.length} records created.`);
+  return mongoose.disconnect();
+});
