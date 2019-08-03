@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const Book = require('../api/models/book')
 const Users = require('../api/models/users')
 const config = require('../nodemon.json')
+const bcrypt = require('bcrypt')
 
 const reset = async () => {
   mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true, useCreateIndex: true })
@@ -50,11 +51,11 @@ const reset = async () => {
   const users = await Users.create([
     {
       username: "bobsmith",
-      password: "lalalalalalala"
+      password: bcrypt.hashSync("lalalalalalala", 10)
     },
     {
       username: "johndoeadmin",
-      password: "you'llneverguess",
+      password: bcrypt.hashSync("you'llneverguess", 10),
       admin: true
     }
   ])
