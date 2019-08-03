@@ -24,25 +24,25 @@ Currently, this repository includes an API with the following routes:
 
 #### GET /api/books
 
-Retrieve all books.
+√ Retrieve all books. 
 
 #### GET /api/books/:id
 
-Retrieve a specific book by id.
+√ Retrieve a specific book by id.
 
 #### POST /api/books
 
-Create a new book.
+√ Create a new book.
 
 #### PATCH /api/books/:id/reserve
 
-Reserve a book.
+√ Reserve a book.
 
 ## Instructions
 
 To complete this exercise, you will need to do the following:
 
-- [ ] **Create a User Model:** Users have a `username`, a `password`, and an `admin` property which is set to `false` by default.
+- [√] **Create a User Model:** Users have a `username`, a `password`, and an `admin` property which is set to `false` by default.
 
 - [ ] **Create a `POST /api/signup` route:** Create a new route that allows someone to create an account. Securely store the password using the `bcrypt` package. On successful creation, return a JWT token. You should return an error in the following cases:
   * Username is not provided
