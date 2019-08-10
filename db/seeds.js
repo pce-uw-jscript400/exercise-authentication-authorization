@@ -1,11 +1,16 @@
 const mongoose = require('mongoose')
 const Book = require('../api/models/book')
+const Users = require('../api/models/users')
 const config = require('../nodemon.json')
+const bcrypt = require('bcrypt')
 
 const reset = async () => {
-  mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true })
-  await Book.deleteMany() // Deletes all records
-  return await Book.create([
+  mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true, useCreateIndex: true })
+  await Book.deleteMany() // Deletes all books
+  await Users.deleteMany() // Deleted all users
+
+  // create initial books
+  const books = await Book.create([
     {
       title: 'The Colour of Magic',
       published: 1983,
@@ -41,9 +46,24 @@ const reset = async () => {
       ]
     }
   ])
+
+  // create users
+  const users = await Users.create([
+    {
+      username: "bobsmith",
+      password: bcrypt.hashSync("lalalalalalala", 10)
+    },
+    {
+      username: "johndoeadmin",
+      password: bcrypt.hashSync("you'llneverguess", 10),
+      admin: true
+    }
+  ])
+
+  return { books, users }
 }
 
 reset().catch(console.error).then((response) => {
-  console.log(`Seeds successful! ${response.length} records created.`)
+  console.log(`Seeds successful! ${response.books.length} books created and ${response.users.length} users created.`)
   return mongoose.disconnect()
 })
