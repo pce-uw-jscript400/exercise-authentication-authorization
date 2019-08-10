@@ -63,4 +63,38 @@ router.post('/login', async (req, res, next) => {
     next(error)
 })
 
+
+
+router.patch('/users/:id/permissions', async (req, res, next) => {
+    const status = 204
+    try {
+        const token = req.headers.authorization.split('Bearer')[1]
+        const payload = jsonwebtoken.verify(token, SECRET_KEY)
+        const user = await User.findById(id)
+// * A valid JWT token is not provided (status 401)
+        if (!payload) {
+            status = 401;
+            throw new Error('Invalid token')
+        }
+// * The JWT token is for a user who is not an admin (status 401)        
+        const checkAdmin = await User.findOne({ _id: payload.req.params }).select('admin')
+        if (!checkAdmin) {
+            status = 401;
+            throw new Error('The JWT token is for a user who is not an admin')
+        }
+ // * The request body does not include an `admin` key with a boolean value (status 400)
+        if (!req.body.admin) {
+            status = 400;
+            throw new Error('Unauthorized')
+        }
+// * User cannot be found (status 404)
+        if (!user) {
+            error.status = 404
+            throw new Error('User cannot be found')
+        }   
+        
+    }   
+})
+
+
 module.exports = router
