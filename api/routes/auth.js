@@ -28,8 +28,7 @@ router.post("/signup", async (req, res, next) => {
     const password = req.body.password;
     if (!username || !password)
       throw new Error(`Please enter a valid username and password`);
-    if (password.length < 8)
-      throw new Error(`Please create stronger password`);
+    if (password.length < 8) throw new Error(`Please create stronger password`);
 
     //make sure username already exists
     let user = await User.findOne({ username });
@@ -54,6 +53,41 @@ router.post("/signup", async (req, res, next) => {
     const response = token;
 
     res.json({ status, response });
+  } catch (e) {
+    console.error(e);
+    const error = e;
+    error.status = 400;
+    next(error);
+  }
+});
+
+//POST
+// http://localhost:5000/api/login
+
+router.post("/login", async (req, res, next) => {
+  const status = 200;
+  try {
+    //get username and password, make sure both are provided
+    const username = req.body.username;
+    const password = req.body.password;
+    if (!username || !password)
+      throw new Error(`Please enter a valid username and password`);
+    //username lookup
+    const user = await User.findOne({ username });
+    if (!user) throw new Error(`Account could not be found`);
+
+    //check password
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) throw new Error(`Please enter a valid username and password`);
+    
+    //JWOT
+    const payload = { id: user._id };
+    const options = { expiresIn: "1 day" };
+    const token = jwot.sign(payload, SECRET_KEY, options);    
+      
+    const response = token;
+    res.json({ status, response });
+      
   } catch (e) {
     console.error(e);
     const error = e;
