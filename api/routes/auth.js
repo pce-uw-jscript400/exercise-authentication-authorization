@@ -79,15 +79,45 @@ router.post("/login", async (req, res, next) => {
     //check password
     const isValid = await bcrypt.compare(password, user.password);
     if (!isValid) throw new Error(`Please enter a valid username and password`);
-    
+
     //JWOT
     const payload = { id: user._id };
     const options = { expiresIn: "1 day" };
-    const token = jwot.sign(payload, SECRET_KEY, options);    
-      
+    const token = jwot.sign(payload, SECRET_KEY, options);
+
     const response = token;
     res.json({ status, response });
-      
+  } catch (e) {
+    console.error(e);
+    const error = e;
+    error.status = 400;
+    next(error);
+  }
+});
+
+// PATCH
+// http://localhost:5000/api/users/5d4fcfb6b64f4427ea074fd4/permissions
+// send admin jwot in auth header
+
+router.patch("/users/:id/permissions", async (req, res, next) => {
+  let status = 204;
+  try {
+    //check jwot for permissions
+    const token = req.headers.authorization.split("Bearer ")[1];
+    const payload = jwot.verify(token, SECRET_KEY);
+    const requestor = await User.findOne({ _id: payload.id });
+    const requestorIsAdmin = requestor.admin === true ? true : false;
+
+    if (!token || !payload || !requestor || !requestorIsAdmin)
+      throw new Error(`You are not authorized to change permissions`);
+
+    const user = await User.findById(req.params.id);
+    if (!user) throw new Error(`Account could not be found`);
+
+    user.admin = true;
+    user.save();
+
+    res.json({ status });
   } catch (e) {
     console.error(e);
     const error = e;

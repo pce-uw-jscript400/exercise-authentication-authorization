@@ -2,11 +2,14 @@ const mongoose = require("mongoose");
 const Book = require("../api/models/book");
 const User = require("../api/models/user");
 const config = require("../nodemon.json");
+const bcrypt = require("bcrypt");
 
 const reset = async () => {
   mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true });
   await Book.deleteMany(); // Deletes all records
   await User.deleteMany(); // Deletes all records
+
+  const hashedPassword = await bcrypt.hash('password', 10);
   return (
     await Book.create([
       {
@@ -48,12 +51,12 @@ const reset = async () => {
     User.create([
       {
         username: "admin",
-        password: "password",
+        password: hashedPassword,
         admin: "true"
       },
       {
         username: "regularUser",
-        password: "password",
+        password: hashedPassword,
         admin: "false"
       }
     ])
