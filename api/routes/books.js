@@ -1,6 +1,9 @@
 const router = require('express').Router()
 const Book = require('../models/book')
 
+
+//GET 
+// http://localhost:5000/api/books
 router.get('/', async (req, res, next) => {
   const status = 200
   const response = await Book.find().select('-__v')
