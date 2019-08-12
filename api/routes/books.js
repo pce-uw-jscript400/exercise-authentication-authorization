@@ -1,6 +1,11 @@
 const router = require('express').Router()
 const Book = require('../models/book')
+const User = require("../models/user");
+const jwot = require("jsonwebtoken");
+const { SECRET_KEY } = process.env;
 
+//GET 
+// http://localhost:5000/api/books
 router.get('/', async (req, res, next) => {
   const status = 200
   const response = await Book.find().select('-__v')
@@ -24,10 +29,22 @@ router.get('/:id', async (req, res, next) => {
   }
 })
 
+// POST
+// http://localhost:5000/api/books
+
 // You should only be able to create a book if the user is an admin
 router.post('/', async (req, res, next) => {
   const status = 200
   try {
+    //check jwot for permissions
+    const token = req.headers.authorization.split("Bearer ")[1];
+    const payload = jwot.verify(token, SECRET_KEY);
+    const requestor = await User.findOne({ _id: payload.id });
+    const requestorIsAdmin = requestor.admin === true ? true : false;
+
+    if (!token || !payload || !requestor || !requestorIsAdmin)
+      throw new Error(`You are not authorized to change permissions`);
+
     const book = await Book.create(req.body)
     if (!book) throw new Error(`Request body failed: ${JSON.stringify(req.body)}`)
     
