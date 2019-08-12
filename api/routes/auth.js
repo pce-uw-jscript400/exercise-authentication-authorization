@@ -47,9 +47,8 @@ router.post('/login', async (req, res, next)=> {
         const { username, password } = req.body
         //throw error if no username
         if (!username) throw new Error(`Username required to login`)
-
         const guest = await User.findOne({username})
-        const isValid = bcrypt.compare(password, guest.password)
+        const isValid = await bcrypt.compare(password, guest.password)
         //throw error if issue with username/password
         if (!isValid) throw new Error(`Username and password do not match`)
 
@@ -67,38 +66,48 @@ router.patch('/users/:id/permissions', async (req, res, next) => {
     const status = 204
     try {
         //make sure request body is OK - 400
-        const { permissions } = req.body
+        const permissions = req.body.admin
         const { id } = req.params
-        if ( permissions !== (true || false)) throw new Error (`There was a problem with your request body`)
+        if ( !(permissions === "true" || permissions === "false")) {
+            const error = new Error(`There was a problem with your request body`)
+            error.status = 400
+            next(error)
+        }
 
         //make sure headers contain auth - 401
         const token = req.headers.authorization.split('Bearer ')[1]
-        if (!token) throw new Error(`There was a problem with your request`)
+        if (!token) {
+            const error = new Error(`There was a problem with your request`)
+            error.status = 401
+            next(error)
+        }
+
         const payload = jsonwebtoken.verify(token, SECRET_KEY)
 
         const user = await User.findOne({ _id: payload.id }).select('-__v -password')
         //make sure request maker is an admin - 401
         const { admin } = user 
-        if (admin !== true) throw new Error(`There was a problem with your request`)
+        if (admin !== true) {
+            const error = new Error(`There was a problem with your request`)
+            error.status = 401
+            next(error)
+        }
 
         //make sure user exists - 404
         const updatedUser = await User.findOne({_id: id})
-        if (!updatedUser) throw new Error(`User ID: ${id} does not exist!`)
+        if (!updatedUser) {
+            const error = new Error(`User ID: ${id} does not exist!`)
+            error.status = 404
+            next(error)
+        }
 
         //need to verify this and make sure it is correct way to do..
         updatedUser.admin = permissions
         await updatedUser.save()
 
-        res.status(status).json({status})
+        res.status(status).send()
 
     } catch (e) {
-        if (e.message == 'There was a problem with your request body') {
-            e.status = 400
-        } else if (e.message == 'There was a problem with your request') {
-            e.status = 401
-        } else {
-            e.status = 404
-        }
         next(e)
     }
 })

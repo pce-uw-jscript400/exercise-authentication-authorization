@@ -1,6 +1,7 @@
-const SECRET_KEY = process.env
+const { SECRET_KEY } = process.env
 const router = require('express').Router()
 const Book = require('../models/book')
+const User = require('../models/user')
 const jsonwebtoken = require('jsonwebtoken')
 
 router.get('/', async (req, res, next) => {
@@ -30,8 +31,10 @@ router.get('/:id', async (req, res, next) => {
 // Nested try/catch here
 router.post('/', async (req, res, next) => {
   const status = 200
+  const { authorization } = req.headers
   try {
-    const token = req.headers.authorization.split('Bearer ')[1]
+    if (!authorization) throw new Error (`You are not authorized!`)
+    const token = authorization.split('Bearer ')[1]
     //make sure token exists
     if (!token) throw new Error (`You are not authorized`)
     const payload = jsonwebtoken.verify(token, SECRET_KEY)
@@ -39,7 +42,6 @@ router.post('/', async (req, res, next) => {
     if (!user || user.admin !== true) throw new Error (`You are not authorized`)
 
     try {
-      //need to insert stuff here 
       const book = await Book.create(req.body)
       if (!book) throw new Error(`Request body failed: ${JSON.stringify(req.body)}`)
       
@@ -60,18 +62,18 @@ router.post('/', async (req, res, next) => {
 })
 
 // You should only be able to reserve a book if a user is logged in
-router.patch('/:id/reserve', async (req, res, next) => {
+router.post('/:id/reserve', async (req, res, next) => {
   const { id } = req.params
   const status = 200
-  const token = req.headers.authorization.split('Bearer ')[1]
+  const { authorization } = req.headers
   //make sure token exists
-  if (!token) {
+  if (! authorization) {
     const error = new Error (`You are not authorized`)
     error.status = 401
     return next(error)
   }
-  //try/catch
   try {
+    const token = authorization.split('Bearer ')[1]
     const payload = jsonwebtoken.verify(token, SECRET_KEY)
     const user = await User.findById(payload.id)
 
@@ -92,13 +94,12 @@ router.patch('/:id/reserve', async (req, res, next) => {
     await book.save()
     
     const response = await Book.findById(book._id).select('-__v')
+    res.json({ status, response })
   } catch (e) {
     console.error(e)
     e.status = 401
     next(e)
   }
-
-  res.json({ status, response })
 })
 
 // You should only be able to return a book if the user is logged in
@@ -115,18 +116,18 @@ router.patch('/:id/return', async (req, res, next) => {
       return next(error)
     }
     //try/catch this?
-    const payload = jsonwebtoken.verify(token, SECRET_KEY)
-
+    const payload = await jsonwebtoken.verify(token, SECRET_KEY)
     const book = await Book.findById(id)
     if (!book) {
       const error = new Error (`Book _id: ${id} not found`)
       error.status = 404
       return next(error)
-    } else if (book.reserved.memberId !== payload.id) {
+    } else if (book.reserved.memberId != payload.id) {
+      //not deep equal because string/object comparison
       const error = new Error (`A different user reserved this book`)
       error.status = 401
       return next(error)
-    } else if (book.reserved !== true) {
+    } else if (book.reserved.status !== true) {
       const error = new Error(`This book is not reserved!`)
       error.status = 400
       return next(error)
@@ -142,9 +143,8 @@ router.patch('/:id/return', async (req, res, next) => {
     res.status(status).json({status,response})
 
   } catch (e) {
-    //what to put here?
     console.error(e)
-    //next (e)?
+    next (e)
   }
 })
 
