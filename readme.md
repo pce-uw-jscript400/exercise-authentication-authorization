@@ -42,21 +42,21 @@ Reserve a book.
 
 To complete this exercise, you will need to do the following:
 
-- [ ] **Create a User Model:** Users have a `username`, a `password`, and an `admin` property which is set to `false` by default.
++ [ ] **Create a User Model:** Users have a `username`, a `password`, and an `admin` property which is set to `false` by default.
 
-- [ ] **Create a `POST /api/signup` route:** Create a new route that allows someone to create an account. Securely store the password using the `bcrypt` package. On successful creation, return a JWT token. You should return an error in the following cases:
++ [ ] **Create a `POST /api/signup` route:** Create a new route that allows someone to create an account. Securely store the password using the `bcrypt` package. On successful creation, return a JWT token. You should return an error in the following cases:
   * Username is not provided
   * Username is already taken
   * Password is not provided
   * Password is less than 8 characters
 
-- [ ] **Create a `POST /api/login` route:** Create a new route that allows someone to login. On successful creation, return a JWT token. You should return an error in the following cases:
++ [ ] **Create a `POST /api/login` route:** Create a new route that allows someone to login. On successful creation, return a JWT token. You should return an error in the following cases:
   * Username is not found
   * Username and password do not match
 
-- [ ] **Add an admin User and a regular user to the `./db/seeds.js` file:** In the `seeds.js` file, when the `reset()` function is run, create a new User who has admin permissions and another User without admin permissions. Make sure that both users will be deleted and then recreated whenever the function is run.
++ [ ] **Add an admin User and a regular user to the `./db/seeds.js` file:** In the `seeds.js` file, when the `reset()` function is run, create a new User who has admin permissions and another User without admin permissions. Make sure that both users will be deleted and then recreated whenever the function is run.
 
-- [ ] **Create a `PATCH /api/users/:id/permissions` route:** Create a new route that allows for an admin to change permissions of another user. The route should only be looking for the `admin: <boolean>` key in the request body and setting the value appropriately. On success, return a status 204. You should return an error in the following cases:
++ [ ] **Create a `PATCH /api/users/:id/permissions` route:** Create a new route that allows for an admin to change permissions of another user. The route should only be looking for the `admin: <boolean>` key in the request body and setting the value appropriately. On success, return a status 204. You should return an error in the following cases:
   * A valid JWT token is not provided (status 401)
   * The JWT token is for a user who is not an admin (status 401)
   * User cannot be found (status 404)
