@@ -65,36 +65,29 @@ router.post('/login', async (req, res, next) => {
 
 
 
-router.patch('/users/:id/permissions', async (req, res, next) => {
-    const status = 204
+router.patch("/users/:id/permissions", async (req, res, next) => {
+    let status = 204;
     try {
-        const token = req.headers.authorization.split('Bearer')[1]
-        const payload = jsonwebtoken.verify(token, SECRET_KEY)
-        const user = await User.findById(id)
-// * A valid JWT token is not provided (status 401)
-        if (!payload) {
-            status = 401;
-            throw new Error('Invalid token')
-        }
-// * The JWT token is for a user who is not an admin (status 401)        
-        const checkAdmin = await User.findOne({ _id: payload.req.params }).select('admin')
-        if (!checkAdmin) {
-            status = 401;
-            throw new Error('The JWT token is for a user who is not an admin')
-        }
- // * The request body does not include an `admin` key with a boolean value (status 400)
-        if (!req.body.admin) {
-            status = 400;
-            throw new Error('Unauthorized')
-        }
-// * User cannot be found (status 404)
-        if (!user) {
-            error.status = 404
-            throw new Error('User cannot be found')
-        }   
-        
-    }   
-})
-
+        const token = req.headers.authorization.split("Bearer ")[1];
+        const payload = jwot.verify(token, SECRET_KEY);
+        const requestor = await User.findOne({ _id: payload.id });
+        const requestorIsAdmin = requestor.admin === true ? true : false;
+        const user = await User.findById(req.params.id);
+    
+        if (!token || !payload || !requestor || !requestorIsAdmin)
+            throw new Error(`You are not authorized to change permissions`);
+    
+        if (!user) throw new Error(`Account could not be found`);
+    
+        user.admin = true;
+        user.save();
+        res.json({ status });
+        } catch (e) {
+        console.error(e);
+        const error = e;
+        error.status = 400;
+        next(error);
+    }
+});
 
 module.exports = router

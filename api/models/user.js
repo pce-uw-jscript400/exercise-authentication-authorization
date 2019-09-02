@@ -13,7 +13,8 @@ const schema = new mongoose.Schema({
     },
     admin: {
         type: Boolean,
-        default: false
+        default: false,
+        required: true
     }
 })
 

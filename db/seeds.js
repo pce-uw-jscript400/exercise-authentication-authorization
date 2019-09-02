@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const Book = require('../api/models/book')
 const User = require('../api/models/user')
 const config = require('../nodemon.json')
+const bcrypt = require('bcrypt')
 
 const reset = async () => {
   mongoose.connect(config.env.MONGO_DB_CONNECTION, { useNewUrlParser: true, useCreateIndex: true })
@@ -26,20 +27,26 @@ const reset = async () => {
   ])
 
 
+// Reset the user collection
+await User.deleteMany() // Deletes all records
+// Create 2 users with hashed passwords
+const saltRounds = 10;
+
+const adminPassword = await bcrypt.hash('CourseInstructor', saltRounds);
+const userPassword = await bcrypt.hash('CourseStudent', saltRounds);
 const user = User.create([
   {
-    username: 'Katrina',
-    password: 'katrina1',
-    admin: false
-  }, 
+    username : 'admin',
+    password : adminPassword,
+    admin : true
+  },
   {
-    username: 'Admin',
-    password: 'admin111',
-    admin: true
+    username : 'katrina',
+    password : userPassword
   }
 ])
-return [book, user]
 
+  return { book, user }
 }
 
 reset()
